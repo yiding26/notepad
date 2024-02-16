@@ -1,0 +1,20 @@
+menubar.file:File
+
+notepad.notSave:Do you want to save changes to the file?
+notepad.defaultFileName:untitled
+notepad.newFile:New
+notepad.openFile:Open
+notepad.saveFile:Save
+notepad.saveAsFile:Save As...
+notepad.saveFailed:File Save Failed!
+'%d' means selected text's length
+notepad.caretPos.selected.format:(%d chars)
+
+textarea.gotoLineAndColumn.title:Goto Line & Column
+textarea.gotoLineAndColumn.message:[line]:[column]
+textarea.popupmenu.undo:Undo
+textarea.popupmenu.redo:Redo
+textarea.popupmenu.copy:Copy
+textarea.popupmenu.cut:Cut
+textarea.popupmenu.paste:Paste
+textarea.popupmenu.goto:Goto...
