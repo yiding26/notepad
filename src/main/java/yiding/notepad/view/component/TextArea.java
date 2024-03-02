@@ -1,6 +1,7 @@
-package yiding.text.view.component;
+package yiding.notepad.view.component;
 
 import yiding.Main;
+import yiding.notepad.view.window.LoadingDialog;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
@@ -95,7 +96,6 @@ public class TextArea extends JTextArea {
     public void setText(String t) {
         if (Objects.equals(t, getText()))
             return;
-        setEditable(false);
         String[] texts = t.split(System.lineSeparator());
         for (String s : texts) {
             if (s.length() >= 4096) {
@@ -115,9 +115,15 @@ public class TextArea extends JTextArea {
         else {
             super.setText(t.substring(0, MAX));
             String text = t.substring(MAX);
-            final int BLOCK_SIZE = 8192;
+            System.out.println(Runtime.getRuntime().freeMemory() / 256);
+            final int BLOCK_SIZE = (int) (Runtime.getRuntime().freeMemory() / 256);
+            LoadingDialog loadingDialog = new LoadingDialog();
+            loadingDialog.setParentWindow(getRootPane());
+            loadingDialog.showDialog();
+            loadingDialog.setMinAndMax(0, text.length());
             for (int i = 0; i < text.length();i = Math.min(text.length(), i+BLOCK_SIZE)) {
                 System.out.println(i + "/" + text.length());
+                loadingDialog.updateProgress(i, i + "/" + text.length());
                 try {
                     synchronized (TextArea.this) {
                         TextArea.this.getDocument().insertString(getText().length(), text.substring(i, Math.min(text.length(), i+BLOCK_SIZE)), null);
@@ -126,9 +132,10 @@ public class TextArea extends JTextArea {
                     throw new RuntimeException(e);
                 }
             }
+            loadingDialog.closeDialog();
+            getRootPane().setFocusable(true);
         }
         discardAllEdits();
-        setEditable(true);
     }
 
     public void gotoLineAndColumn() {

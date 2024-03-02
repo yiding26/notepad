@@ -1,4 +1,4 @@
-package yiding.text.utils;
+package yiding.notepad.utils;
 
 import yiding.Main;
 
@@ -20,7 +20,7 @@ public class Language {
 
     public void initLanguageName() {
         Locale locale = Locale.getDefault();
-        name = locale.toString().toLowerCase(locale);
+        name = locale.getLanguage() + "_" + locale.getCountry();
         Main.logger.info(name);
     }
 

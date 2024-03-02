@@ -1,4 +1,4 @@
-package yiding.text.view.component;
+package yiding.notepad.view.component;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;

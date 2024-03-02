@@ -1,6 +1,6 @@
-package yiding.text.view.service;
+package yiding.notepad.view.service;
 
-import yiding.text.view.component.AbstractDialog;
+import yiding.notepad.view.component.AbstractDialog;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -18,10 +18,6 @@ public abstract class AbstractDialogService {
     @SuppressWarnings("unchecked")
     public final <T extends Component> T getComponent(String name){
         return (T) this.componentMap.get(name);
-    }
-
-    public final <T extends Component> T getParentWindowComponent(String name){
-        return this.getDialog().parentWindow.getComponent(name);
     }
 
     public final AbstractDialog<? extends AbstractDialogService> getDialog(){

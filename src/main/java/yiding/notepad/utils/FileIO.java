@@ -1,4 +1,4 @@
-package yiding.text.utils;
+package yiding.notepad.utils;
 
 import yiding.Main;
 

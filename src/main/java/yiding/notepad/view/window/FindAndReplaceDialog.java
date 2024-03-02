@@ -1,7 +1,7 @@
-package yiding.text.view.window;
+package yiding.notepad.view.window;
 
-import yiding.text.view.component.AbstractDialog;
-import yiding.text.view.service.FindAndReplaceDialogService;
+import yiding.notepad.view.component.AbstractDialog;
+import yiding.notepad.view.service.FindAndReplaceDialogService;
 
 import java.awt.*;
 

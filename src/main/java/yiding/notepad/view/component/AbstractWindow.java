@@ -1,18 +1,15 @@
-package yiding.text.view.component;
+package yiding.notepad.view.component;
 
 import yiding.Main;
-import yiding.text.view.service.AbstractWindowService;
+import yiding.notepad.view.service.AbstractWindowService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-public abstract class AbstractWindow<R extends AbstractWindowService> extends JFrame {
+public abstract class AbstractWindow<R extends AbstractWindowService> extends javax.swing.JFrame {
     public static final int HIDE = 0, DISPOSE = 1, EXIT = 2, DISPOSE_OR_EXIT = 3;
     int closeMode;
     public static int key, windowCNT;
@@ -20,8 +17,10 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends JF
     public R service;
 
     static {
-        if ("Mac OS X".equals(System.getProperty("os.name"))) key = KeyEvent.META_DOWN_MASK;
-        else key = KeyEvent.CTRL_DOWN_MASK;
+        if ("Mac OS X".equals(System.getProperty("os.name"))) {
+            key = KeyEvent.META_DOWN_MASK;
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+        } else key = KeyEvent.CTRL_DOWN_MASK;
     }
 
     public AbstractWindow(String title, Dimension size, Class<R> clazz) {
@@ -38,7 +37,7 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends JF
         this.setTitle(title);
         this.setSize(size);
         this.setLocationRelativeTo(null);
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.setDefaultCloseOperation(javax.swing.JFrame.DO_NOTHING_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -52,6 +51,12 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends JF
         } catch (ReflectiveOperationException e) {
             Main.logger.info(e.getMessage());
         }
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                resize();
+            }
+        });
     }
 
     public void showWindow() {
@@ -87,16 +92,15 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends JF
         throw new UnsupportedOperationException("禁止使用setVisible()，请使用" + method);
     }
 
+    public <T extends Component> void addComponent(T component, Consumer<T> consumer){
+        if(consumer != null)
+            consumer.accept(component);
+        this.add(component);
+    }
+
     public <T extends Component> void addComponent(Object o, T component, Consumer<T> consumer){
         if(consumer != null)
             consumer.accept(component);
-        this.add(component, o);
-    }
-
-    public <T extends Component> void addComponent(Object o, String name, T component, Consumer<T> consumer){
-        if(consumer != null)
-            consumer.accept(component);
-        this.componentMap.put(name, component);
         this.add(component, o);
     }
 
@@ -145,5 +149,9 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends JF
 
     public void addKeyboardAction(ActionListener anAction, int keyCode, int modifiers) {
         getRootPane().registerKeyboardAction(anAction, KeyStroke.getKeyStroke(keyCode, key + modifiers), JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
+    public void resize() {
+
     }
 }

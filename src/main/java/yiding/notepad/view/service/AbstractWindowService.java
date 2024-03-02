@@ -1,6 +1,6 @@
-package yiding.text.view.service;
+package yiding.notepad.view.service;
 
-import yiding.text.view.component.AbstractWindow;
+import yiding.notepad.view.component.AbstractWindow;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -10,8 +10,8 @@ public abstract class AbstractWindowService {
     private AbstractWindow<? extends AbstractWindowService> window;
     private HashMap<String, Component> componentMap;
 
-    public final void setWindow(AbstractWindow<? extends AbstractWindowService> abstractWindow, HashMap<String, Component> componentMap) {
-        this.window = abstractWindow;
+    public final void setWindow(AbstractWindow<? extends AbstractWindowService> AbstractWindow, HashMap<String, Component> componentMap) {
+        this.window = AbstractWindow;
         this.componentMap = componentMap;
     }
 

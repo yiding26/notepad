@@ -3,8 +3,8 @@ package yiding;
 import yiding.log.ConsoleOutput;
 import yiding.log.LogManager;
 import yiding.log.Logger;
-import yiding.text.utils.Language;
-import yiding.text.view.window.NotepadWindow;
+import yiding.notepad.utils.Language;
+import yiding.notepad.view.window.NotepadWindow;
 
 import javax.swing.*;
 

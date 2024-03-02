@@ -1,10 +1,10 @@
-package yiding.text.view.service;
+package yiding.notepad.view.service;
 
 import yiding.Main;
-import yiding.text.utils.FileIO;
-import yiding.text.view.component.InsertButton;
-import yiding.text.view.component.TextArea;
-import yiding.text.view.window.NotepadWindow;
+import yiding.notepad.utils.FileIO;
+import yiding.notepad.view.component.InsertButton;
+import yiding.notepad.view.component.TextArea;
+import yiding.notepad.view.window.NotepadWindow;
 
 import javax.swing.*;
 import java.awt.*;

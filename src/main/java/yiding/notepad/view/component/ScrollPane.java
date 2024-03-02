@@ -1,4 +1,4 @@
-package yiding.text.view.component;
+package yiding.notepad.view.component;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -9,7 +9,7 @@ import java.awt.event.MouseEvent;
 
 public class ScrollPane extends JScrollPane {
     public ScrollPane() {
-        this.setBorder(BorderFactory.createLineBorder(Color.BLACK, 0));
+        setBackground(new Color(0, 0, 0, 0));
         this.setBorder(null);
         getHorizontalScrollBar().setUI(new ScrollBarUI());
         getVerticalScrollBar().setUI(new ScrollBarUI());
@@ -27,7 +27,9 @@ public class ScrollPane extends JScrollPane {
             LookAndFeel.installColors(scrollbar, "ScrollBar.background",
                     "ScrollBar.foreground");
             thumbColor = Color.gray;
-            trackColor = UIManager.getColor("ScrollBar.track");
+            trackColor = Color.white;
+            scrollbar.setBackground(new Color(0, 0, 0, 0));
+            scrollbar.setOpaque(true);
             scrollbar.addMouseListener(new MouseAdapter() {
                 boolean isMousePressed;
                 @Override
@@ -86,7 +88,13 @@ public class ScrollPane extends JScrollPane {
             int h = thumbBounds.height;
             g.translate(thumbBounds.x, thumbBounds.y);
             g.setColor(thumbColor);
-            g.fillRoundRect(2, 2, w - 2, h - 2, 0, 0);
+            int i = 2;
+            int arc;
+            if (scrollbar.getOrientation() == JScrollBar.VERTICAL) {
+                arc = w / 2;
+                if (h < 10) arc = 1;
+            } else arc = h / 2;
+            g.fillRoundRect(i, i, w - (2 * i), h - (2 * i), arc, arc);
             g.translate(-thumbBounds.x, -thumbBounds.y);
         }
     }

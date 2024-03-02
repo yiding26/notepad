@@ -1,8 +1,7 @@
-package yiding.text.view.component;
+package yiding.notepad.view.component;
 
 import yiding.Main;
-import yiding.text.view.service.AbstractDialogService;
-import yiding.text.view.service.AbstractWindowService;
+import yiding.notepad.view.service.AbstractDialogService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +18,7 @@ public abstract class AbstractDialog<R extends AbstractDialogService> extends JD
     int closeMode;
     private final HashMap<String, Component> componentMap = new HashMap<>();
     public R service;
-    public AbstractWindow<? extends AbstractWindowService> parentWindow;
+    public Component parentWindow;
 
     static {
         if ("Mac OS X".equals(System.getProperty("os.name"))) key = KeyEvent.META_DOWN_MASK;
@@ -55,7 +54,7 @@ public abstract class AbstractDialog<R extends AbstractDialogService> extends JD
         }
     }
 
-    public void setParentWindow(AbstractWindow<? extends AbstractWindowService> parentWindow) {
+    public void setParentWindow(JComponent parentWindow) {
         this.parentWindow = parentWindow;
     }
 
@@ -89,11 +88,21 @@ public abstract class AbstractDialog<R extends AbstractDialogService> extends JD
         throw new UnsupportedOperationException("禁止使用setVisible()，请使用" + method);
     }
 
+    public <T extends Component> void addComponent(String name, T component){
+        this.componentMap.put(name, component);
+        this.add(component);
+    }
+
     public <T extends Component> void addComponent(String name, T component, Consumer<T> consumer){
         if(consumer != null)
             consumer.accept(component);
         this.componentMap.put(name, component);
         this.add(component);
+    }
+
+    public <T extends Component> void addComponent(Object o, String name, T component){
+        this.componentMap.put(name, component);
+        this.add(component, o);
     }
 
     public <T extends Component> void addComponent(Container container, String name, T component, Consumer<T> consumer){
