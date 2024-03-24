@@ -1,16 +1,16 @@
-package yiding.notepad.view.service;
+package yiding.notepad.contol;
 
 import yiding.notepad.view.component.AbstractDialog;
 
 import java.awt.*;
 import java.util.HashMap;
 
-public abstract class AbstractDialogService {
+public abstract class AbstractDialogController {
 
-    private AbstractDialog<? extends AbstractDialogService> dialog;
+    private AbstractDialog<? extends AbstractDialogController> dialog;
     private HashMap<String, Component> componentMap;
 
-    public final void setWindow(AbstractDialog<? extends AbstractDialogService> abstractWindow, HashMap<String, Component> componentMap) {
+    public final void setWindow(AbstractDialog<? extends AbstractDialogController> abstractWindow, HashMap<String, Component> componentMap) {
         this.dialog = abstractWindow;
         this.componentMap = componentMap;
     }
@@ -20,7 +20,7 @@ public abstract class AbstractDialogService {
         return (T) this.componentMap.get(name);
     }
 
-    public final AbstractDialog<? extends AbstractDialogService> getDialog(){
+    public final AbstractDialog<? extends AbstractDialogController> getDialog(){
         return this.dialog;
     }
     public boolean onClose() {

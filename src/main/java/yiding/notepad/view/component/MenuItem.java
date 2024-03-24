@@ -11,13 +11,19 @@ public class MenuItem extends JMenuItem {
         else key = KeyEvent.CTRL_DOWN_MASK;
     }
 
+    public MenuItem(String text, ActionListener l) {
+       this(text, l, -1);
+    }
+
     public MenuItem(String text, ActionListener l, int keycode) {
         this(text, l, keycode, 0);
     }
 
     public MenuItem(String text, ActionListener l, int keycode, int modifiers) {
         super(text);
-        this.setAccelerator(KeyStroke.getKeyStroke(keycode, key + modifiers));
+        if (keycode != -1)
+            this.setAccelerator(KeyStroke.getKeyStroke(keycode, key + modifiers));
+        //getRootPane().registerKeyboardAction(l, KeyStroke.getKeyStroke(keycode, key + modifiers), JComponent.WHEN_IN_FOCUSED_WINDOW);
         this.addActionListener(l);
     }
 }

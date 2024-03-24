@@ -1,4 +1,4 @@
-package yiding.notepad.view.service;
+package yiding.notepad.contol;
 
 import yiding.notepad.view.component.AbstractWindow;
 

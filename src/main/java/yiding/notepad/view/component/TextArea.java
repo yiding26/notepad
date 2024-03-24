@@ -1,34 +1,38 @@
 package yiding.notepad.view.component;
 
-import yiding.Main;
-import yiding.notepad.view.window.LoadingDialog;
+import yiding.NotepadApplication;
+import yiding.notepad.utils.Language;
+import yiding.notepad.view.LoadingDialog;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
 import javax.swing.undo.UndoManager;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.beans.BeanProperty;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class TextArea extends JTextArea {
+public class TextArea extends JTextPane {
     UndoManager undoManager = new UndoManager();
     public TextArea() {
         super();
-        this.setUndoManager(undoManager);
-        this.setBorder(BorderFactory.createLineBorder(Color.BLACK, 0));
+        setUndoManager(undoManager);
+        setBorder(BorderFactory.createLineBorder(Color.BLACK, 0));
     }
 
     public Point getCaretPos() {
-        int pos = this.getCaretPosition();
+        int pos = getCaretPosition();
         int line, column;
         try {
-            line = this.getLineOfOffset(pos);
-            column = pos - this.getLineStartOffset(line);
+            line = getLineOfOffset(pos);
+            column = pos - getLineStartOffset(line);
         } catch (BadLocationException e) {
             throw new RuntimeException(e);
         }
@@ -38,17 +42,17 @@ public class TextArea extends JTextArea {
     public void setCaretPos(Point point) {
         int line = point.x - 1, column = point.y - 1, index = 0;
         try {
-            final int maxLine = this.getLineCount();
+            final int maxLine = getLineCount();
             if (line > maxLine)
                 line = maxLine;
-            final int maxColumn = this.getLineEndOffset(line) - this.getLineStartOffset(line);
+            final int maxColumn = getLineEndOffset(line) - getLineStartOffset(line);
             if (column > maxColumn)
                 column = maxColumn;
-            index += this.getLineStartOffset(line) + column;
+            index += getLineStartOffset(line) + column;
         } catch (BadLocationException e) {
             throw new RuntimeException(e);
         }
-        this.setCaretPosition(index);
+        setCaretPosition(index);
     }
 
     @Override
@@ -60,7 +64,7 @@ public class TextArea extends JTextArea {
             try {
                 String str = (String) transferable.getTransferData(DataFlavor.stringFlavor);
                 if (str.length() > 20 * 1024 * 1024) {
-                    JOptionPane.showMessageDialog(this.getRootPane(), "Content is too long (" + str.length() + " chars > "+ (10 * 1024 * 1024) + " chars) " , "Can Not Paste", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(getRootPane(), "Content is too long (" + str.length() + " chars > "+ (10 * 1024 * 1024) + " chars) " , "Can Not Paste", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 super.paste();
@@ -71,25 +75,25 @@ public class TextArea extends JTextArea {
     }
 
     public void setUndoManager(UndoManager undoManager) {
-        this.getDocument().removeUndoableEditListener(undoManager);
+        getDocument().removeUndoableEditListener(undoManager);
         this.undoManager = undoManager;
-        this.getDocument().addUndoableEditListener(undoManager);
+        getDocument().addUndoableEditListener(undoManager);
     }
 
     public void undo() {
-        if (this.undoManager.canUndo())
-            this.undoManager.undo();
+        if (undoManager.canUndo())
+            undoManager.undo();
     }
 
     public void redo() {
-        if (this.undoManager.canRedo())
-            this.undoManager.redo();
+        if (undoManager.canRedo())
+            undoManager.redo();
     }
 
     @Override
     public void setEditable(boolean b) {
         super.setEditable(b);
-        if (b) this.discardAllEdits();
+        if (b) discardAllEdits();
     }
 
     @Override
@@ -99,8 +103,6 @@ public class TextArea extends JTextArea {
         String[] texts = t.split(System.lineSeparator());
         for (String s : texts) {
             if (s.length() >= 4096) {
-                setLineWrap(true);
-                setWrapStyleWord(true);
                 break;
             }
         }
@@ -115,32 +117,36 @@ public class TextArea extends JTextArea {
         else {
             super.setText(t.substring(0, MAX));
             String text = t.substring(MAX);
-            System.out.println(Runtime.getRuntime().freeMemory() / 256);
-            final int BLOCK_SIZE = (int) (Runtime.getRuntime().freeMemory() / 256);
+            final int BLOCK_SIZE = 1024 * 1024;
             LoadingDialog loadingDialog = new LoadingDialog();
+            loadingDialog.setTitle("Loading...");
             loadingDialog.setParentWindow(getRootPane());
             loadingDialog.showDialog();
             loadingDialog.setMinAndMax(0, text.length());
             for (int i = 0; i < text.length();i = Math.min(text.length(), i+BLOCK_SIZE)) {
-                System.out.println(i + "/" + text.length());
-                loadingDialog.updateProgress(i, i + "/" + text.length());
+                double d = ((double) (i + 1) / (double) text.length()) * 100;
+                NotepadApplication.logger.info(i + "/" + text.length() + " " + d + "%");
+                loadingDialog.updateProgress(i, i + "/" + text.length() + "  " + (int) d + "%");
+                if (loadingDialog.isCanceled())
+                    break;
                 try {
                     synchronized (TextArea.this) {
-                        TextArea.this.getDocument().insertString(getText().length(), text.substring(i, Math.min(text.length(), i+BLOCK_SIZE)), null);
+                        getDocument().insertString(getText().length(), text.substring(i, Math.min(text.length(), i+BLOCK_SIZE)), null);
                     }
                 } catch (BadLocationException e) {
                     throw new RuntimeException(e);
                 }
             }
+            loadingDialog.setCloseMode(AbstractDialog.DISPOSE);
             loadingDialog.closeDialog();
             getRootPane().setFocusable(true);
         }
         discardAllEdits();
     }
 
-    public void gotoLineAndColumn() {
+    public void gotoLAC() {
         Point caretPos = getCaretPos();
-        Object object = JOptionPane.showInputDialog(getRootPane(), Main.language.getLanguage("textarea.gotoLineAndColumn.message"), Main.language.getLanguage("textarea.gotoLineAndColumn.title"), JOptionPane.PLAIN_MESSAGE, null, null, caretPos.x + ":" + caretPos.y);
+        Object object = JOptionPane.showInputDialog(getRootPane(), Language.getLanguage("textarea.gotoLAC.message"), Language.getLanguage("textarea.gotoLAC.title"), JOptionPane.PLAIN_MESSAGE, null, null, caretPos.x + ":" + caretPos.y);
         if (object != null) {
             String string = object.toString();
             if (Pattern.matches("\\s*\\d+\\s*([:：])\\s*\\d+\\s*", string)) {
@@ -150,8 +156,54 @@ public class TextArea extends JTextArea {
         }
     }
 
-    private void discardAllEdits() {
-        if (this.undoManager != null)
-            this.undoManager.discardAllEdits();
+    public void discardAllEdits() {
+        if (undoManager != null)
+            undoManager.discardAllEdits();
+    }
+
+    @BeanProperty(bound = false)
+    public int getLineCount() {
+        Element map = getDocument().getDefaultRootElement();
+        return map.getElementCount();
+    }
+
+    public int getLineStartOffset(int line) throws BadLocationException {
+        int lineCount = getLineCount();
+        if (line < 0) {
+            throw new BadLocationException("Negative line", -1);
+        } else if (line >= lineCount) {
+            throw new BadLocationException("No such line", getDocument().getLength()+1);
+        } else {
+            Element map = getDocument().getDefaultRootElement();
+            Element lineElem = map.getElement(line);
+            return lineElem.getStartOffset();
+        }
+    }
+
+    public int getLineEndOffset(int line) throws BadLocationException {
+        int lineCount = getLineCount();
+        if (line < 0) {
+            throw new BadLocationException("Negative line", -1);
+        } else if (line >= lineCount) {
+            throw new BadLocationException("No such line", getDocument().getLength()+1);
+        } else {
+            Element map = getDocument().getDefaultRootElement();
+            Element lineElem = map.getElement(line);
+            int endOffset = lineElem.getEndOffset();
+            // hide the implicit break at the end of the document
+            return ((line == lineCount - 1) ? (endOffset - 1) : endOffset);
+        }
+    }
+
+    public int getLineOfOffset(int offset) throws BadLocationException {
+        Document doc = getDocument();
+        if (offset < 0) {
+            throw new BadLocationException("Can't translate offset to line", -1);
+        } else if (offset > doc.getLength()) {
+            throw new BadLocationException("Can't translate offset to line", doc.getLength()+1);
+        } else {
+            Element map = getDocument().getDefaultRootElement();
+            return map.getElementIndex(offset);
+        }
     }
 }

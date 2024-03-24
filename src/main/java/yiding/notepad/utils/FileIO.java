@@ -1,7 +1,9 @@
 package yiding.notepad.utils;
 
-import yiding.Main;
+import yiding.NotepadApplication;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -44,10 +46,10 @@ public class FileIO {
                 stringBuilder.append(str);
                 stringBuilder.append(System.lineSeparator());
             }
-            Main.logger.info("read file (chars) " + this.path);
+            NotepadApplication.logger.info("read file (chars) " + this.path);
             return stringBuilder.toString().replaceAll("\\r", "");
         } catch (FileNotFoundException e) {
-            Main.logger.error(String.format("read file (chars) %s can not find file, so create new.", path));
+            NotepadApplication.logger.error(String.format("read file (chars) %s can not find file, so create new.", path));
             return "";
         }
     }
@@ -60,14 +62,14 @@ public class FileIO {
             for (byte b : bytes) {
                 stringBuilder.append(getHex(b));
             }
-            Main.logger.info(String.format("read file (bytes) %s", path));
+            NotepadApplication.logger.info(String.format("read file (bytes) %s", path));
             fileInputStream.close();
             return stringBuilder.toString();
         } catch (FileNotFoundException e) {
-            Main.logger.info(String.format("read file (bytes) %s can not find file, so create new.", path));
+            NotepadApplication.logger.info(String.format("read file (bytes) %s can not find file, so create new.", path));
             return "";
         } catch (IOException e) {
-            Main.logger.info(String.format("read file (bytes) %s %s", path, e.getMessage()));
+            NotepadApplication.logger.info(String.format("read file (bytes) %s %s", path, e.getMessage()));
             return null;
         }
     }
@@ -78,16 +80,16 @@ public class FileIO {
             streamWriter.append(text);
             streamWriter.close();
         } catch (IOException e) {
-            Main.logger.error(String.format("write file (chars) %s %s", path, e.getMessage()));
+            NotepadApplication.logger.error(String.format("write file (chars) %s %s", path, e.getMessage()));
             return false;
         }
-        Main.logger.info(String.format("write file (chars) %s", path));
+        NotepadApplication.logger.info(String.format("write file (chars) %s", path));
         return true;
     }
 
     private boolean writeBytes(String text) {
         try {
-            char[] chars = text.toCharArray();
+            char[] chars = text.replaceAll("\\r", "").replaceAll("\\n", "").toCharArray();
             byte[] bytes = new byte[chars.length / 2];
             for (int i = 0;i<chars.length;i+=2) {
                 bytes[i/2] = getByte(String.valueOf(chars[i]) + chars[i + 1]);
@@ -96,10 +98,10 @@ public class FileIO {
             fileOutputStream.write(bytes);
             fileOutputStream.close();
         } catch (IOException e) {
-            Main.logger.error(String.format("write file (bytes) %s %s", path, e.getMessage()));
+            NotepadApplication.logger.error(String.format("write file (bytes) %s %s", path, e.getMessage()));
             return false;
         }
-        Main.logger.info(String.format("write file (bytes) %s", path));
+        NotepadApplication.logger.info(String.format("write file (bytes) %s", path));
         return true;
     }
 
@@ -113,5 +115,35 @@ public class FileIO {
 
     private byte getByte(String s) {
         return (byte) Integer.parseInt(s, 16);
+    }
+
+    public static String get(Frame parentWindow, String name, String path) {
+        if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            int mode;
+            if (name.toLowerCase().contains("open")) mode = FileDialog.LOAD;
+            else if (name.toLowerCase().contains("save")) mode = FileDialog.SAVE;
+            else return "";
+            FileDialog fileDialog = new FileDialog(parentWindow, name, mode);
+            if (!path.isEmpty()) {
+                fileDialog.setDirectory(path);
+                fileDialog.setFile(path);
+            }
+            fileDialog.setVisible(true);
+            if (fileDialog.getDirectory() != null && fileDialog.getFile() != null)
+                return fileDialog.getDirectory() + fileDialog.getFile();
+            else if (!path.isEmpty()) return path;
+        } else {
+            JFileChooser fileChooser = new JFileChooser();
+            if (!path.isEmpty()) {
+                fileChooser.setCurrentDirectory(new File(path));
+                fileChooser.setSelectedFile(new File(path));
+            }
+            int option = fileChooser.showDialog(parentWindow, name);
+            if (option == JFileChooser.APPROVE_OPTION)
+                return fileChooser.getSelectedFile().getAbsolutePath();
+            else if (option == JFileChooser.CANCEL_OPTION)
+                if (!path.isEmpty()) return path;
+        }
+        return "";
     }
 }

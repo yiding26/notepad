@@ -1,7 +1,7 @@
 package yiding.notepad.view.component;
 
-import yiding.Main;
-import yiding.notepad.view.service.AbstractDialogService;
+import yiding.NotepadApplication;
+import yiding.notepad.contol.AbstractDialogController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,8 +12,8 @@ import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-public abstract class AbstractDialog<R extends AbstractDialogService> extends JDialog {
-    public static final int HIDE = 0, DISPOSE = 1, EXIT = 2;
+public abstract class AbstractDialog<R extends AbstractDialogController> extends JDialog {
+    public static final int DO_NOTHING = -1, HIDE = 0, DISPOSE = 1;
     static int key, dialogCNT;
     int closeMode;
     private final HashMap<String, Component> componentMap = new HashMap<>();
@@ -27,14 +27,6 @@ public abstract class AbstractDialog<R extends AbstractDialogService> extends JD
 
     public AbstractDialog(String title, Dimension size, Class<R> clazz) {
         super();
-        if (dialogCNT > 256) {
-            int result = JOptionPane.showConfirmDialog(null, "the windows num is out of the limit.(" + dialogCNT + " > 256).\nDo you want to Open Another Dialog?", "Java Swing Dialog", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.NO_OPTION)
-                this.dispose();
-        }
-        synchronized (this) {
-            dialogCNT++;
-        }
         this.closeMode = DISPOSE;
         this.setTitle(title);
         this.setSize(size);
@@ -46,28 +38,38 @@ public abstract class AbstractDialog<R extends AbstractDialogService> extends JD
                     AbstractDialog.this.closeDialog();
             }
         });
-        try {
-            this.service = clazz.getConstructor().newInstance();
-            this.service.setWindow(this, this.componentMap);
-        } catch (ReflectiveOperationException e) {
-            Main.logger.error(e.getMessage());
+        if (clazz != null) {
+            try {
+                if (clazz != AbstractDialogController.class) {
+                    this.service = clazz.getConstructor().newInstance();
+                    this.service.setWindow(this, this.componentMap);
+                }
+            } catch (ReflectiveOperationException e) {
+                NotepadApplication.logger.error(e.getMessage());
+            }
         }
+    }
+
+    public AbstractDialog(String title, Dimension size) {
+        this(title, size, null);
     }
 
     public void setParentWindow(JComponent parentWindow) {
         this.parentWindow = parentWindow;
+        this.setLocationRelativeTo(parentWindow);
     }
 
     public void showDialog() {
+        setLocationRelativeTo(parentWindow);
         this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         super.setVisible(true);
     }
 
     public void closeDialog() {
         switch (closeMode) {
+            case DO_NOTHING -> {/*do nothing*/}
             case HIDE -> super.setVisible(false);
             case DISPOSE -> this.dispose();
-            case EXIT -> System.exit(0);
             default -> throw new RuntimeException("What does it mean? " + closeMode);
         }
     }
@@ -88,38 +90,19 @@ public abstract class AbstractDialog<R extends AbstractDialogService> extends JD
         throw new UnsupportedOperationException("禁止使用setVisible()，请使用" + method);
     }
 
-    public <T extends Component> void addComponent(String name, T component){
-        this.componentMap.put(name, component);
-        this.add(component);
+    public <T extends Component> T register(String name, T component){
+        return register(name, component, null);
     }
 
-    public <T extends Component> void addComponent(String name, T component, Consumer<T> consumer){
-        if(consumer != null)
+    public <T extends Component> T register(String name, T component, Consumer<T> consumer){
+        if (consumer != null)
             consumer.accept(component);
         this.componentMap.put(name, component);
-        this.add(component);
-    }
-
-    public <T extends Component> void addComponent(Object o, String name, T component){
-        this.componentMap.put(name, component);
-        this.add(component, o);
-    }
-
-    public <T extends Component> void addComponent(Container container, String name, T component, Consumer<T> consumer){
-        if(consumer != null)
-            consumer.accept(component);
-        this.componentMap.put(name, component);
-        container.add(component);
-    }
-
-    public <T extends Component> void mapComponent(String name, T component, Consumer<T> consumer){
-        if(consumer != null)
-            consumer.accept(component);
-        this.componentMap.put(name, component);
+        return component;
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Component> T getComponent(String name){
+    public <T extends Component> T get(String name){
         return  (T) this.componentMap.get(name);
     }
 

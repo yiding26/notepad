@@ -1,7 +1,7 @@
 package yiding.notepad.view.component;
 
-import yiding.Main;
-import yiding.notepad.view.service.AbstractWindowService;
+import yiding.NotepadApplication;
+import yiding.notepad.contol.AbstractWindowService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,9 +12,9 @@ import java.util.function.Consumer;
 public abstract class AbstractWindow<R extends AbstractWindowService> extends javax.swing.JFrame {
     public static final int HIDE = 0, DISPOSE = 1, EXIT = 2, DISPOSE_OR_EXIT = 3;
     int closeMode;
-    public static int key, windowCNT;
+    public static int key, windowCNT = 0;
     private final HashMap<String, Component> componentMap = new HashMap<>();
-    public R service;
+    public R controller;
 
     static {
         if ("Mac OS X".equals(System.getProperty("os.name"))) {
@@ -24,12 +24,6 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends ja
     }
 
     public AbstractWindow(String title, Dimension size, Class<R> clazz) {
-        if (windowCNT > 64) {
-            int result = JOptionPane.showConfirmDialog(null, "the windows num is out of the limit.(" + windowCNT + " > 256).\nDo you want to Open Another Window?", "Java Swing Window", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (result == JOptionPane.NO_OPTION) {
-                this.dispose();
-            }
-        }
         synchronized (this) {
             windowCNT++;
         }
@@ -41,15 +35,15 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends ja
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (service.onClose())
+                if (controller.onClose())
                     AbstractWindow.this.closeWindow();
             }
         });
         try {
-            this.service = clazz.getConstructor().newInstance();
-            this.service.setWindow(this, this.componentMap);
+            this.controller = clazz.getConstructor().newInstance();
+            this.controller.setWindow(this, this.componentMap);
         } catch (ReflectiveOperationException e) {
-            Main.logger.info(e.getMessage());
+            NotepadApplication.logger.info(e.getMessage());
         }
         addComponentListener(new ComponentAdapter() {
             @Override
@@ -67,10 +61,16 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends ja
         switch (closeMode) {
             case HIDE -> super.setVisible(false);
             case DISPOSE -> this.dispose();
-            case EXIT -> System.exit(0);
+            case EXIT -> {
+                dispose();
+                System.exit(0);
+            }
             case DISPOSE_OR_EXIT -> {
-                if (onlyOneWindow()) System.exit(0);
-                else this.dispose();
+                this.dispose();
+                if (onlyOneWindow()) {
+                    System.out.println(windowCNT);
+                    System.exit(0);
+                }
             }
             default -> throw new RuntimeException("What does it mean? " + closeMode);
         }
@@ -92,43 +92,36 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends ja
         throw new UnsupportedOperationException("禁止使用setVisible()，请使用" + method);
     }
 
-    public <T extends Component> void addComponent(T component, Consumer<T> consumer){
-        if(consumer != null)
-            consumer.accept(component);
-        this.add(component);
-    }
-
-    public <T extends Component> void addComponent(Object o, T component, Consumer<T> consumer){
-        if(consumer != null)
-            consumer.accept(component);
-        this.add(component, o);
-    }
-
-    public  <T extends Component> void addComponentTo(Container target, String name, T component){
-        addComponentTo(target, name, component, null);
-    }
-
-    public  <T extends Component> void addComponentTo(Container target, String name, T component, Consumer<T> consumer){
-        if(consumer != null)
-            consumer.accept(component);
-        this.componentMap.put(name, component);
-        target.add(component);
-    }
-
-    public <T extends JMenuBar> void setupMenubar(T menuBar, Consumer<T> consumer) {
+    public <T extends JMenuBar> void setupMenuBar(T menuBar, Consumer<T> consumer) {
         if(consumer != null)
             consumer.accept(menuBar);
         setJMenuBar(menuBar);
     }
 
-    public <T extends Component> void mapComponent(String name, T component, Consumer<T> consumer){
-        if(consumer != null)
+    public <T extends Component> T register(String name, T component){
+        return register(name, component, null);
+    }
+
+    public <T extends Component> T register(String name, T component, Consumer<T> consumer){
+        if (consumer != null)
             consumer.accept(component);
         this.componentMap.put(name, component);
+        return component;
+    }
+
+    public <T extends Component> T add(T component, Consumer<T> consumer) {
+        return add(component, consumer, null);
+    }
+
+    public <T extends Component> T add(T component, Consumer<T> consumer, Object o) {
+        if (consumer != null)
+            consumer.accept(component);
+        add(component, o);
+        return component;
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends Component> T getComponent(String name){
+    public <T extends Component> T get(String name){
         return  (T) this.componentMap.get(name);
     }
 
@@ -137,21 +130,18 @@ public abstract class AbstractWindow<R extends AbstractWindowService> extends ja
     }
 
     public abstract void initWindowContent();
-    public abstract void initKeyboardAction();
 
     public static boolean onlyOneWindow() {
-        return windowCNT == 1;
+        return windowCNT == 0;
     }
 
     public void addKeyboardAction(ActionListener anAction, int keyCode) {
         addKeyboardAction(anAction, keyCode, 0);
     }
 
-    public void addKeyboardAction(ActionListener anAction, int keyCode, int modifiers) {
-        getRootPane().registerKeyboardAction(anAction, KeyStroke.getKeyStroke(keyCode, key + modifiers), JComponent.WHEN_IN_FOCUSED_WINDOW);
+    public void addKeyboardAction(ActionListener anAction, int keycode, int modifiers) {
+        getRootPane().registerKeyboardAction(anAction, KeyStroke.getKeyStroke(keycode, key + modifiers), JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
-    public void resize() {
-
-    }
+    public void resize() {}
 }

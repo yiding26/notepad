@@ -1,0 +1,27 @@
+#menubar
+file:文件
+file.newWindow:新建窗口
+file.newFile:新建
+file.openFile:打开
+file.saveFile:保存
+file.saveAsFile:另存为...
+#textrea
+#'%d' means selected text's length
+textarea.caret.selected.format:(%d个字符)
+textarea.undo:撤销
+textarea.redo:重做
+textarea.copy:复制
+textarea.cut:剪切
+textarea.paste:粘贴
+textarea.gotoLAC:转到...
+textarea.gotoLAC.title:转到行 & 列
+textarea.gotoLAC.message:[行]:[列]
+#notepad
+defaultFilename:未命名
+saveFailed:文件保存失败
+notSave:你想要保存对文件的改动吗？
+#Choose Correct Operating System
+win.openInFileBrowser:在文件资源管理器中打开
+mac.openInFileBrowser:在Finder中打开
+nux.openInFileBrowser:在文件管理器中打开
+unk.openInFileBrowser:在文件管理器中打开
